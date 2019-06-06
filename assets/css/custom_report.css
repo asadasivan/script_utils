@@ -1,0 +1,31 @@
+/* contact.arunsec@gmail.com */
+
+/* th { font-size: 16px; }
+td { font-size: 14px; }
+body {margin:0.5em;}
+ */
+ 
+.dataTables_wrapper { font-size: 14px; margin:0.5em;  }
+ 
+th { font-size: 15px; }
+td { font-size: 14px; }
+
+.pagination {
+  /* display: inline-block; */
+  font-size: 12px;
+}
+
+/* .pagination a {
+  color: black;
+  float: left;
+  padding: 8px 16px;
+  text-decoration: none;
+} */
+
+div table td a {
+   margin-left: -16px; 
+   /* text-align: left; */
+  
+}
+ 
+
