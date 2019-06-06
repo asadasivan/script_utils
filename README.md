@@ -1,2 +1,2 @@
 # python_utils
-Report containing some useful scripts
+Repo containing some useful scripts
