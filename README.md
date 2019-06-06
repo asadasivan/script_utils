@@ -1,7 +1,7 @@
-# python_utils
+## python_utils
 Repo containing some useful scripts
 
-# Scripts
+## Scripts
 
 | Script | Description |
 | ---- | ------- |
