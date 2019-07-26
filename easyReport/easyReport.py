@@ -25,7 +25,6 @@ class CustomReport:
             fileHandle.write("<!-- The line below is to make sure it uses the right encoding format  -->" + "\n")
             fileHandle.write("<meta name=viewport content='width=device-width, initial-scale=1'>")
             fileHandle.write("<meta http-equiv='Content-Type' content='application/xhtml+xml; charset=UTF-8' />" + "\n")
-            
             fileHandle.write("<link rel='stylesheet' href='https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css' integrity='sha384-EkHEUZ6lErauT712zSr0DZ2uuCmi3DoQj6ecNdHQXpMpFNGAQ48WjfXCE5n20W+R' crossorigin='anonymous'>" + "\n")
             fileHandle.write("<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css' integrity='sha384-2QMA5oZ3MEXJddkHyZE/e/C1bd30ZUPdzqHrsaHMP3aGDbPA9yh77XDHXC9Imxw+' crossorigin='anonymous'>" + "\n")
             fileHandle.write("<script src='https://code.jquery.com/jquery-3.3.1.js' integrity='sha384-fJU6sGmyn07b+uD1nMk7/iSb4yvaowcueiQhfVgQuD98rfva8mcr1eSvjchfpMrH' crossorigin='anonymous'></script>" + "\n")
