@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import json
-from collections import OrderedDict
 
 # A class containing methods to create HTML table or JSON report from python dict
+
 
 class CustomReport:
     def __init__(self, findingsDict, headerArry):
@@ -17,7 +17,6 @@ class CustomReport:
     # Create HTML table
     def createHTMLReport(self, reportFile, reportTitle):
         print("[Info] Creating HTML report...")
-        # enter the output filename
         with open(reportFile, 'w') as fileHandle:
             fileHandle.write("<!doctype html>" + "\n")
             fileHandle.write("<html lang='en-US'>" + "\n")
@@ -56,16 +55,27 @@ class CustomReport:
             for row in self.findingsDict:
                 rows = self.findingsDict[row]
                 for col in rows:
-                    # colStr = None
+                    colStr = None
                     lines = None
                     # check if col is array and convert it to string
                     if isinstance(col, list):
                         lines = len(col)  # no. of lines
-                        colStr = "\n".join(col)
+                        # To handle Array with one value
+                        if lines == 1:
+                            colStr = col[0]
+                            # To handle string operations when value is None
+                            if colStr is None:
+                                colStr = "Null"
+                        else:
+                            colStr = "\n".join(col)
+                            colStr = colStr.replace("\n", "<br />")
                     else:
                         lines = 1
                         colStr = col
-                    colStr = colStr.replace("\n", "<br />")
+                        # To handle string operations when value is None
+                        if colStr is None:
+                            colStr = "Null"
+                        colStr = colStr.replace("\n", "<br />")
                     
                     # perform collapsible if more lines are in the cell
                     if lines > 3:
@@ -73,9 +83,9 @@ class CustomReport:
                         fileHandle.write("\t\t\t" + "<td>" + "\n")
                         fileHandle.write("\t\t\t\t" + "<div class='container'>" + "\n")
                         fileHandle.write("\t\t\t\t\t\t" + "<a href='#demo" + str(rowNumber) + "' data-toggle='collapse'> Show/Hide details </a>" + "\n")
-                        fileHandle.write("\t\t\t\t\t\t" +"<div id='demo" + str(rowNumber) + "' class='collapse'>" + "\n")
+                        fileHandle.write("\t\t\t\t\t\t" + "<div id='demo" + str(rowNumber) + "' class='collapse'>" + "\n")
                         fileHandle.write("\t\t\t\t\t\t\t" + colStr + "\n")
-                        fileHandle.write("\t\t\t\t\t\t" + "</div>"+ "\n")
+                        fileHandle.write("\t\t\t\t\t\t" + "</div>" + "\n")
                         fileHandle.write("\t\t\t\t" + "</div>" + "\n")
                         fileHandle.write("\t\t\t" + "</td>" + "\n")
                     else:
@@ -112,5 +122,3 @@ class CustomReport:
             json.dump(violationsDict, fileHandle, indent=4)
 
         print("[Done] Custom JSON report successfully created: " + reportFile)
-    
-    
