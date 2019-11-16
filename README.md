@@ -1,5 +1,5 @@
 ## script_utils
-Repo containing some useful scripts
+Repo containing scripts to automate manual process
 
 ## Scripts
 
