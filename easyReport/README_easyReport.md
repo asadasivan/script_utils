@@ -7,7 +7,7 @@ It can be easily integrated with any tool. Call the class and pass the values fo
 The rest will be handled automatically by the tool. The tool currently provides pagination, column sorting, searching, etc.
 
 ## Note
-<b> When you copy the script, ensure to copy the assets directory for all js and CSS files. This is required for the features to work. Make sure the assets directory is placed where the HTML report is created <b>
+<b> When you copy the script, ensure to copy the assets directory for all js and CSS files. This is required for the features to work. Make sure the assets directory is placed where the HTML report is created. <b>
 
 
 
