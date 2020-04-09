@@ -45,21 +45,27 @@ def parseExtractedData(sourceDir, filename):
     for file_path in filePathArry:
         for searchType in searchDict.keys():
             searchTypeOutput = searchTypeCommon(searchType, file_path)
+            if searchTypeOutput is None: # No Match
+                continue
             if searchType in resultsDict:
                 searchTypeOutput = resultsDict[searchType][0] + "\n" + searchTypeOutput
-            if searchTypeOutput:
+            else:
                 resultsDict[searchType] = [searchTypeOutput]
 
         commentsOutput = searchComments(file_path)
+        if commentsOutput is None:  # No Match
+            continue
         if "searchComments" in resultsDict:
             commentsOutput = resultsDict["searchComments"][0] + "\n" + commentsOutput
-        if commentsOutput:
+        else:
             resultsDict["searchComments"] = [commentsOutput]
 
         s3bucketOutput = getS3Buckets(file_path)
+        if s3bucketOutput is None:  # No Match
+            continue
         if "S3Buckets" in resultsDict:
             s3bucketOutput = resultsDict["S3Buckets"][0] + "\n" + s3bucketOutput
-        if s3bucketOutput:
+        else:
             resultsDict["S3Buckets"] = [s3bucketOutput]
     printExtractedData(resultsDict)
 
@@ -107,6 +113,10 @@ def getS3Buckets(filename):
     except ErrorReturnCode:
         # print("No match found")
         pass
+
+# ToDo
+# Search for file names that usually contains secrets.
+# See list in https://github.com/Plazmaz/leaky-repo
 
 
 def printExtractedData(resultsDict):
