@@ -16,9 +16,15 @@ except ImportError:
     sys.exit(1)
 
 try:
-    from prettytable import PrettyTable
+    from termcolor import colored
 except ImportError:
-    print("[Error] Please install prettytable")
+    print("[Error] Please install termcolor")
+    sys.exit(1)
+
+try:
+    from beautifultable import BeautifulTable
+except ImportError:
+    print("[Error] Please install BeautifulTable")
     sys.exit(1)
 
 searchDict = {
@@ -45,29 +51,35 @@ def parseExtractedData(sourceDir, filename):
     for file_path in filePathArry:
         for searchType in searchDict.keys():
             searchTypeOutput = searchTypeCommon(searchType, file_path)
-            if searchTypeOutput is None: # No Match
+            if searchTypeOutput is None: # No Match, skip iteration
                 continue
+            # handle multiple match
             if searchType in resultsDict:
                 searchTypeOutput = resultsDict[searchType][0] + "\n" + searchTypeOutput
-            else:
+
+            if searchTypeOutput: # handle single match
                 resultsDict[searchType] = [searchTypeOutput]
 
         commentsOutput = searchComments(file_path)
-        if commentsOutput is None:  # No Match
+
+        if commentsOutput is None:  # No Match, skip iteration
             continue
+        # handle multiple match
         if "searchComments" in resultsDict:
             commentsOutput = resultsDict["searchComments"][0] + "\n" + commentsOutput
-        else:
+
+        if commentsOutput:
             resultsDict["searchComments"] = [commentsOutput]
 
         s3bucketOutput = getS3Buckets(file_path)
-        if s3bucketOutput is None:  # No Match
+        if s3bucketOutput is None:  # No Match, skip iteration
             continue
-        if "S3Buckets" in resultsDict:
+        if "S3Buckets" in resultsDict: # handle multiple match
             s3bucketOutput = resultsDict["S3Buckets"][0] + "\n" + s3bucketOutput
-        else:
+
+        if s3bucketOutput:
             resultsDict["S3Buckets"] = [s3bucketOutput]
-    printExtractedData(resultsDict)
+    printTable(resultsDict)
 
 # Get list of files or dir in a particular dir
 def getAllFiles(sourceDir):
@@ -117,21 +129,27 @@ def getS3Buckets(filename):
 # ToDo
 # Search for file names that usually contains secrets.
 # See list in https://github.com/Plazmaz/leaky-repo
+# Handle zip files
+# perform string on the executables to extract important stuff
 
-
-def printExtractedData(resultsDict):
+# Create table
+def printTable(resultsDict):
     for result in resultsDict:
-        printTable([result], resultsDict[result])
+        parenttable = BeautifulTable(max_width=100, default_alignment=BeautifulTable.ALIGN_LEFT)
+        parenttable.set_style(BeautifulTable.STYLE_GRID)
+        subtable = BeautifulTable(default_alignment=BeautifulTable.ALIGN_LEFT)
+        #table.column_headers = [colored(result, attrs=['bold', 'blink'], on_color='on_red')]
+        #table.column_headers = [colored(result, 'cyan', attrs=['bold'])]
 
-# Print Lists as Tabular Data
-def printTable(headerArry, rowArry):
-    table = PrettyTable(headerArry)
-    # align left
-    table.align = "l"
-    table.add_row(rowArry)
-    print(table)
-    print("")
 
+
+        matchedValueArry = resultsDict[result][0].split("\n")
+        for matchedValue in matchedValueArry:
+            subtable.append_row([matchedValue])
+
+        parenttable.append_row([colored(result, 'cyan', attrs=['bold']), subtable])
+        print(parenttable)
+        print("")
 
 ###############################################################################
 # Main
