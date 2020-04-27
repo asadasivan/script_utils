@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# Requirements: sh, PrettyTable
-# Credits:
-# i. Tomnomnom gf tool (https://github.com/tomnomnom/gf)
-# ii. Ryan Wendel
 
 import sys
 import os
@@ -27,6 +23,9 @@ except ImportError:
     print("[Error] Please install BeautifulTable")
     sys.exit(1)
 
+secretsFileList = 'config/secretFiles.txt'
+
+# Regex patters to search for interesting things in the file
 searchDict = {
     "URL": ["-oriahE", "https?://[^\"\\'> ]+"],
     "Upload Fields": ["-HnriE", "\u003cinput[^\u003e]+type=[\"']?file[\"']?"],
@@ -43,45 +42,51 @@ searchDict = {
 def parseExtractedData(sourceDir, filename):
     resultsDict = {}
     filePathArry = []
+    print("[Info] Analyzing files. Please wait...")
     if sourceDir:
         filePathArry = getAllFiles(sourceDir)
     else: # filename
         filePathArry.append(filename)
 
-    for file_path in filePathArry:
+    for filePath in filePathArry:
         for searchType in searchDict.keys():
-            searchTypeOutput = searchTypeCommon(searchType, file_path)
+            searchTypeOutput = searchTypeCommon(searchType, filePath)
             if searchTypeOutput is None: # No Match, skip iteration
                 continue
-            # handle multiple match
-            if searchType in resultsDict:
+
+            if searchType in resultsDict: # handle multiple match
                 searchTypeOutput = resultsDict[searchType][0] + "\n" + searchTypeOutput
 
             if searchTypeOutput: # handle single match
                 resultsDict[searchType] = [searchTypeOutput]
 
-        commentsOutput = searchComments(file_path)
+        commentsOutput = searchComments(filePath)
 
-        if commentsOutput is None:  # No Match, skip iteration
-            continue
-        # handle multiple match
-        if "searchComments" in resultsDict:
-            commentsOutput = resultsDict["searchComments"][0] + "\n" + commentsOutput
+        if commentsOutput is not None:
+            if "searchComments" in resultsDict:  # handle multiple match
+                commentsOutput = resultsDict["searchComments"][0] + "\n" + commentsOutput
 
-        if commentsOutput:
-            resultsDict["searchComments"] = [commentsOutput]
+            if commentsOutput:  # handle single match
+                resultsDict["searchComments"] = [commentsOutput]
 
-        s3bucketOutput = getS3Buckets(file_path)
-        if s3bucketOutput is None:  # No Match, skip iteration
-            continue
-        if "S3Buckets" in resultsDict: # handle multiple match
-            s3bucketOutput = resultsDict["S3Buckets"][0] + "\n" + s3bucketOutput
+        s3bucketOutput = getS3Buckets(filePath)
+        if s3bucketOutput is not None:
+            if "S3Buckets" in resultsDict:  # handle multiple match
+                s3bucketOutput = resultsDict["S3Buckets"][0] + "\n" + s3bucketOutput
 
-        if s3bucketOutput:
-            resultsDict["S3Buckets"] = [s3bucketOutput]
+            if s3bucketOutput:  # handle single match
+                resultsDict["S3Bucket"] = [s3bucketOutput]
+
+        # check files that contains secrets
+        secretFilesArry = getListFilesSecrets()
+        if (checkSecretFileExists(filePath, secretFilesArry)):
+            if "secretFiles" in resultsDict:
+                resultsDict["secretFiles"] = [resultsDict["secretFiles"][0] + "\n" + filePath]
+            else:
+                resultsDict["secretFiles"] = [filePath]
     printTable(resultsDict)
 
-# Get list of files or dir in a particular dir
+# Get list of all files or sub dir inside a particular dir
 def getAllFiles(sourceDir):
     filePathArry = []
     for root, dirs, files in os.walk(sourceDir, topdown=True):
@@ -90,19 +95,21 @@ def getAllFiles(sourceDir):
             filePathArry.append(filePath)
     return filePathArry
 
-# method to handle common grep commands
+# method to grep common regex patters
 def searchTypeCommon(searchType, filename):
     try:
         searchTypeFlag = searchDict[searchType][0]
         searchTyperegex = searchDict[searchType][1]
         output = grep(searchTypeFlag, searchTyperegex, filename)
-        output = output.strip()
-        return output
+        if output:
+            output = output.strip()
+            return output
+        return None
     except ErrorReturnCode:
         # print("No match found")
         pass
 
-# Method to run grep command to extract comments
+# method to extract comments
 def searchComments(filename):
     try:
         output = grep(grep("-HaniE", "(api|s3|key|secret|pass|aws|azure|github|admin)", filename), "-vi", "copyright")
@@ -112,7 +119,7 @@ def searchComments(filename):
         # print("No match found")
         pass
 
-# Method to run grep command to extract S3buckets
+# Method to extract S3buckets
 def getS3Buckets(filename):
     try:
         output = grep("-hrioaE", "-e", "[a-z0-9.-]+\\.s3\\.amazonaws\\.com",
@@ -125,6 +132,23 @@ def getS3Buckets(filename):
     except ErrorReturnCode:
         # print("No match found")
         pass
+
+# get list of files containing secrets
+def getListFilesSecrets():
+    if os.path.exists(secretsFileList):
+        with open(secretsFileList, 'r') as file:
+            # readlines methods adds a new line character. Hence using read and splitting it
+            return file.read().splitlines()
+    elif IOError:
+        print ("[Error] Error occured while trying to read file: " + secretsFileList)
+
+# check if file containing secret exists
+def checkSecretFileExists(filePath, secretFilesArry):
+    for fileName in secretFilesArry:
+        if fileName in filePath:
+            return True
+    return False
+
 
 # ToDo
 # Search for file names that usually contains secrets.
@@ -140,13 +164,9 @@ def printTable(resultsDict):
         subtable = BeautifulTable(default_alignment=BeautifulTable.ALIGN_LEFT)
         #table.column_headers = [colored(result, attrs=['bold', 'blink'], on_color='on_red')]
         #table.column_headers = [colored(result, 'cyan', attrs=['bold'])]
-
-
-
         matchedValueArry = resultsDict[result][0].split("\n")
         for matchedValue in matchedValueArry:
             subtable.append_row([matchedValue])
-
         parenttable.append_row([colored(result, 'cyan', attrs=['bold']), subtable])
         print(parenttable)
         print("")
